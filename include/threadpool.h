@@ -1,3 +1,5 @@
+#ifndef THREADPOOL_H
+#define THREADPOOL_H
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -110,7 +112,7 @@ class Result
     public:
         Result(std::shared_ptr<Task> task, bool isValid = true);
         ~Result() = default;
-
+        Result(Result&& other) noexcept;
         //setVal方法
         void setVal(Any any);
         //get方法
@@ -153,7 +155,7 @@ class Thread
         void start();
 
         //获取threadId
-        int getId();
+        int getId() const;
 
     private:
         ThreadFunc func_;
@@ -218,3 +220,4 @@ class ThreadPool
         PoolMode poolMode_; //当前线程池的运行模式
         std::atomic_bool isPoolRunning_; //表示线程池运行状态
 };
+#endif
