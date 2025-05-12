@@ -34,10 +34,15 @@ class myTask : public Task
 int main()
 {
     ThreadPool pool;
-    pool.start();
+    pool.start(3);
     Result res1 = pool.submitTask(std::make_shared<myTask>(1, 100000001));
     Result res2 = pool.submitTask(std::make_shared<myTask>(100000001, 200000001));
     Result res3 = pool.submitTask(std::make_shared<myTask>(200000001, 300000000));
+
+    Result res4 = pool.submitTask(std::make_shared<myTask>(200000001, 300000000));
+    Result res5 = pool.submitTask(std::make_shared<myTask>(200000001, 300000000));
+    Result res6 = pool.submitTask(std::make_shared<myTask>(200000001, 300000000));
+    Result res7 = pool.submitTask(std::make_shared<myTask>(200000001, 300000000));
     ULong sum1 = res1.get().cast<ULong>();
     ULong sum2 = res2.get().cast<ULong>();
     ULong sum3 = res3.get().cast<ULong>();

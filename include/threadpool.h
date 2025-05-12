@@ -170,6 +170,9 @@ class ThreadPool
         //设置任务数量上限
         void setTaskMaxQueThreshHold(int threshhold);
 
+        //设置线程数量上限
+        void setMaxThreadSize(int threshhold);
+
         //用户提交任务
         Result submitTask(std::shared_ptr<Task> sp);
 
@@ -182,9 +185,16 @@ class ThreadPool
     private:
         //线程函数
         void threadFunc();
+
+        //检查线程运行状态
+        bool checkRunning();
+
     private:
         std::vector<std::unique_ptr<Thread>> threads_; //线程列表
         int initThreadSize_; //初始线程数量
+        int maxThreadSize_; //最大线程数量
+        std::atomic_int curThreadSize_; //当前线程数量
+        std::atomic_int idleThreadSize_; //空闲线程数量
 
          std::queue<std::shared_ptr<Task>> taskQue_; //任务队列
         std::atomic_int taskSize_; //任务数量
@@ -195,5 +205,5 @@ class ThreadPool
         std::condition_variable notEmpty_; //表示任务队列不空
 
         PoolMode poolMode_; //当前线程池的运行模式
-
+        std::atomic_bool isPoolRunning_; //表示线程池运行状态
 };

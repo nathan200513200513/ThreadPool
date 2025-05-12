@@ -4,14 +4,19 @@
 #include <chrono>
 
 const int TASK_MAX_THRESHHOLD = 4;
+const int THREAD_MAX_THRESHHOLD = 200;
 
 //////////////////////////////////////////////线程池方法/////////////////////////////////////////
 //线程构造
 ThreadPool::ThreadPool()
     : initThreadSize_(0)
+    , maxThreadSize_(THREAD_MAX_THRESHHOLD)
+    , curThreadSize_(0)
+    , idleThreadSize_(0)
     , taskSize_(0)
     , taskQueMaxThreshHold_(TASK_MAX_THRESHHOLD)
     , poolMode_(PoolMode::MODE_FIXED)
+    , isPoolRunning_(false)
 {}
 
 //线程析构
@@ -21,13 +26,28 @@ ThreadPool::~ThreadPool()
 //设置线程模式
 void ThreadPool::setPoolMode(PoolMode mode)
 {
+    if (checkRunning())
+        return;
     poolMode_ = mode;
 }
-
+ 
 //设置任务数量上限
 void ThreadPool::setTaskMaxQueThreshHold(int threshhold)
 {
+    if (checkRunning())
+        return;
     taskQueMaxThreshHold_ = threshhold;
+}
+
+//设置cached 模式下线程数量上限
+void ThreadPool::setMaxThreadSize(int threshhold)
+{
+    if (checkRunning())
+        return;
+    if (poolMode_ == PoolMode::MODE_CACHED)
+    {
+        maxThreadSize_ = threshhold;
+    }
 }
 
 //用户提交任务
@@ -51,13 +71,29 @@ Result ThreadPool::submitTask(std::shared_ptr<Task> sp)
     
     //通知任务队列有任务可以提取了
     notEmpty_.notify_all();
+
+    //cavhed模式下检查是否需要增加线程数量
+    if (poolMode_ == PoolMode::MODE_CACHED
+        && taskSize_ > idleThreadSize_
+        && curThreadSize_ < maxThreadSize_)
+    {
+        std::unique_ptr<Thread> ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc, this));
+        threads_.emplace_back(std::move(ptr));
+        curThreadSize_++;
+    }
+    
+
     return Result(sp);
 }
 
 //启动线程池
 void ThreadPool::start(int initThreadSize)
 {
+    isPoolRunning_ = true;
+
     initThreadSize_ = initThreadSize;
+    curThreadSize_ = initThreadSize;
+
     for (int i = 0; i < initThreadSize_; ++i)
     {
         std::unique_ptr<Thread> ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc, this));
@@ -66,6 +102,7 @@ void ThreadPool::start(int initThreadSize)
     for (int i = 0; i < initThreadSize_; ++i)
     {
         threads_[i]->start();
+        idleThreadSize_++;
     }
 }
 
@@ -108,6 +145,11 @@ void ThreadPool::threadFunc()
             task->exec();
         }
     }
+}
+
+bool ThreadPool::checkRunning()
+{
+    return isPoolRunning_;
 }
 
 //////////////////////////////////////////////线程方法/////////////////////////////////////////
