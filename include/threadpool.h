@@ -6,6 +6,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
+#include <unordered_map>
 
 //线程池运行模式
 enum class PoolMode
@@ -77,6 +78,7 @@ class Semaphore
         Semaphore(int limit = 0)
             : resLimit_(limit)
         {}
+        
         ~Semaphore() {}
 
         //消耗一个信号量
@@ -141,7 +143,7 @@ class Task
 class Thread
 {
     public:
-        using ThreadFunc = std::function<void()>;
+        using ThreadFunc = std::function<void(int)>;
 
         Thread(ThreadFunc func);
 
@@ -150,9 +152,16 @@ class Thread
         //启动线程
         void start();
 
+        //获取threadId
+        int getId();
+
     private:
         ThreadFunc func_;
+        static int genThreadId_;
+        int threadId_;
 };
+
+
 
 //线程池类
 class ThreadPool
@@ -184,13 +193,14 @@ class ThreadPool
         ThreadPool& operator=(const ThreadPool&) = delete;
     private:
         //线程函数
-        void threadFunc();
+        void threadFunc(int threadid);
 
         //检查线程运行状态
-        bool checkRunning();
+        bool checkRunning() const;
 
     private:
-        std::vector<std::unique_ptr<Thread>> threads_; //线程列表
+        //std::vector<std::unique_ptr<Thread>> threads_; //线程列表
+        std::unordered_map<int, std::unique_ptr<Thread>> threads_;
         int initThreadSize_; //初始线程数量
         int maxThreadSize_; //最大线程数量
         std::atomic_int curThreadSize_; //当前线程数量
@@ -203,6 +213,7 @@ class ThreadPool
         std::mutex taskQueMtx_; //确保任务队列线程安全
         std::condition_variable notFull_; //表示任务队列未满
         std::condition_variable notEmpty_; //表示任务队列不空
+        std::condition_variable exitCond_; //表示线程池存在状态
 
         PoolMode poolMode_; //当前线程池的运行模式
         std::atomic_bool isPoolRunning_; //表示线程池运行状态
