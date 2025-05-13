@@ -23,6 +23,7 @@ ThreadPool::ThreadPool()
 ThreadPool::~ThreadPool()
 {
     isPoolRunning_ = false;
+
     std::unique_lock<std::mutex> lock(taskQueMtx_);
     notEmpty_.notify_all();
     exitCond_.wait(lock, [&]()->bool { return threads_.size() == 0; });
@@ -121,13 +122,13 @@ void ThreadPool::start(int initThreadSize)
 //线程函数
 void ThreadPool::threadFunc(int threadid)
 {
-    //记录每个线程刚开始执行时的时间
-    auto lastTime = std::chrono::high_resolution_clock().now();
 
     while(isPoolRunning_)
     {
         std::shared_ptr<Task> task;
 
+        auto lastTime = std::chrono::high_resolution_clock().now();
+        //idleThreadSize_++;
         //线程拿到任务就释放锁
         {
             //获取锁
@@ -169,6 +170,7 @@ void ThreadPool::threadFunc(int threadid)
                     threads_.erase(threadid);
                     std::cout << "tid" << std::this_thread::get_id() << "exit" << std::endl;
                     exitCond_.notify_all();
+                    return;
                 }
             }
 
@@ -221,7 +223,7 @@ Thread::~Thread()
 {}
 
 //获取threadId
-int Thread::getId() const
+int Thread::getId()
 {
     return threadId_;
 }
@@ -245,10 +247,6 @@ Result::Result(std::shared_ptr<Task> task, bool isValid)
 
 //Result res = pool.submitTask()
 //int sum = res.get().cast()用户调用get方法时，如果任务还没执行，返回空
-
-Result::Result(Result&& other) noexcept
-    : any_(std::move(other.any_))
-{}
 
 //setVal方法
 void Result::setVal(Any any)
