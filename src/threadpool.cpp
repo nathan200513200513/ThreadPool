@@ -143,14 +143,11 @@ void ThreadPool::start(int initThreadSize)
 void ThreadPool::threadFunc(int threadId)
 
 {
-<<<<<<< HEAD
-=======
     // std::cout << "begin threadFunc threadid:" << std::this_thread::get_id() << std::endl;
     // std::cout << "end threadFunc threadid:" << std::this_thread::get_id() << std::endl;
     
     //记录每个线程刚开始执行时的时间
     auto lastTime = std::chrono::high_resolution_clock().now();
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
 
     // //对线程运行状态的检查
     // if (!checkRunningState())
@@ -163,19 +160,10 @@ void ThreadPool::threadFunc(int threadId)
     for (;;)
     {
         std::shared_ptr<Task> task;
-<<<<<<< HEAD
-
-        auto lastTime = std::chrono::high_resolution_clock().now();
-        //idleThreadSize_++;
-        //线程拿到任务就释放锁
-        {
-            //获取锁
-=======
         
         //这个作用域使线程拿到任务后就释放锁
         {  
             //先获取锁
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
             std::unique_lock<std::mutex> lock(taskQueMtx_);
             
             //测试输出
@@ -221,16 +209,6 @@ void ThreadPool::threadFunc(int threadId)
                     notEmpty_.wait(lock);
                 }
 
-<<<<<<< HEAD
-                //正在等待中的线程被线程池析构函数唤醒后实现资源回收
-                if (!isPoolRunning_)
-                {
-                    threads_.erase(threadid);
-                    std::cout << "tid" << std::this_thread::get_id() << "exit" << std::endl;
-                    exitCond_.notify_all();
-                    return;
-                }
-=======
                 // //等待在notEmpty条件变量上的线程被线程池的析构函数唤醒以后，回收
                 // if (!isPoolRunning_)
                 // {
@@ -242,7 +220,6 @@ void ThreadPool::threadFunc(int threadId)
             if (!isPoolRunning_)
             { 
                 break;
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
             }
 
             idleThreadSize_--;
@@ -283,16 +260,9 @@ Task::Task()
     : result_(nullptr)
 {}
 
-<<<<<<< HEAD
-Thread::~Thread()
-{}
 
-//获取threadId
-int Thread::getId()
-=======
 //封装用户写的run方法
 void Task::exec()
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
 {
     if (result_ != nullptr)
     {
@@ -312,26 +282,12 @@ Result::Result(std::shared_ptr<Task> task, bool isValid)
     task_->setResult(this);
 }
 
-<<<<<<< HEAD
-//Result res = pool.submitTask()
-//int sum = res.get().cast()用户调用get方法时，如果任务还没执行，返回空
-
-//setVal方法
-void Result::setVal(Any any)
-{
-    any_ = std::move(any);
-    sem_.post();
-}
-
-//get方法
-=======
 Result::Result(Result&& other) noexcept
     : any_(std::move(other.any_))
     // , task_(std::move(other.task_))
     // , sem_(std::move(other.sem_))
 {}
 
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
 Any Result::get()
 {
     if (!isValid_)

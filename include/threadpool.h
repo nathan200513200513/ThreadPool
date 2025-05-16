@@ -1,9 +1,6 @@
-<<<<<<< HEAD
-#include <iostream>
-=======
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
+
 #include <vector>
 #include <queue>
 #include <memory>
@@ -110,14 +107,10 @@ class Result
     public:
         Result(std::shared_ptr<Task> task, bool isValid = true);
         ~Result() = default;
-<<<<<<< HEAD
 
-        //setVal方法
-=======
         Result(Result&& other) noexcept;
 
         //setval方法，获取任务执行完后的返回值
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
         void setVal(Any any);
         //get方法，用户调用获取task的返回值
         Any get();
@@ -151,22 +144,6 @@ class Thread
 public:
     using ThreadFunc = std::function<void(int)>;
 
-<<<<<<< HEAD
-        Thread(ThreadFunc func);
-
-        ~Thread();
-
-        //启动线程
-        void start();
-
-        //获取threadId
-        int getId();
-
-    private:
-        ThreadFunc func_;
-        static int genThreadId_;
-        int threadId_;
-=======
     //线程构造
     Thread(ThreadFunc func);
     //线程析构
@@ -178,7 +155,6 @@ private:
     ThreadFunc func_;
     static int generateId_;
     int threadId_; //保存线程id
->>>>>>> 40be364 (实现简易fixed和cached模式功能)
 };
 
 //线程池类
@@ -226,11 +202,6 @@ private:
     std::atomic_uint taskSize_; //任务数量
     int taskQueMaxThreshHold_; //任务队列数量上限 
 
-<<<<<<< HEAD
-        PoolMode poolMode_; //当前线程池的运行模式
-        std::atomic_bool isPoolRunning_; //表示线程池运行状态
-};
-=======
     std::mutex taskQueMtx_; //确保任务队列线程安全
     std::condition_variable notFull_; //任务队列不满
     std::condition_variable notEmpty_; //任务队列不空
@@ -242,4 +213,3 @@ private:
 };
 
 #endif
->>>>>>> 40be364 (实现简易fixed和cached模式功能)

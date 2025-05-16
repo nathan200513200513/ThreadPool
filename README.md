@@ -1,2 +1,0 @@
-# ThreadPool
-a simple threadpool
